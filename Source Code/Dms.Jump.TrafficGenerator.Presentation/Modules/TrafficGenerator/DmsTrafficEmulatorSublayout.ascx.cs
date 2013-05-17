@@ -1,23 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
 using System.Net;
 using System.Text;
-using System.Collections.Specialized;
-using System.IO;
-using System.Data;
-using System.Web.UI.HtmlControls;
 using System.Threading;
-
+using System.Web;
+using System.Web.UI.WebControls;
 using Dms.Jump.TrafficGenerator.Business.Entities;
 using Dms.Jump.TrafficGenerator.Business.Entities.Requests;
 using Dms.Jump.TrafficGenerator.Business.Helper;
 
 namespace DMS.Jump.TrafficGenerator.Presentation.Modules.TrafficGenerator
 {
+
+    /// <summary>
+    /// The traffic generator sublayout.
+    /// </summary>
     public partial class TrafficGeneratorSublayout : System.Web.UI.UserControl
     {
         #region Properties
@@ -61,31 +60,36 @@ namespace DMS.Jump.TrafficGenerator.Presentation.Modules.TrafficGenerator
             foreach (var trafficParameter in this.TrafficParameters)
             {
 
-                CookieContainer cookie = null; 
-                if( trafficParameter.RequestSource.TrafficInSameSession ) 
-                    cookie = new System.Net.CookieContainer();
+                CookieContainer cookie = null;
+                if (trafficParameter.RequestSource.TrafficInSameSession)
+                {
+                    cookie = new CookieContainer();
+                }
 
                 var uris = trafficParameter.GetUris();
                 requestsStringBuilder.Append("<i>From: " + trafficParameter.RequestSource.UrlReferrer + @"</i><br />");
 
                 foreach (Uri uri in uris)
                 {
-                    requestsStringBuilder.Append(requestCounter + " \t");
                     try
                     {
-                        //WebClient client = new WebClient();
-                        //Stream data = client.OpenRead(uri.ToString());
-
-                        //WebRequest request = WebRequest.Create(uri);
-                        //request.Timeout = 200; 
-                        //WebResponse response = request.GetResponse();
+                        requestsStringBuilder.Append(requestCounter + " \t");
 
                         // Wait a sec to allow http to digest requests
                         if (requestCounter % 100 == 0)
+                        {
                             Thread.Sleep(2500);
+                        }
 
-                        ClientAsync.PerformRequest(uri, cookie);
-                        requestsStringBuilder.Append(uri.ToString() + "<br />");
+                        if (trafficParameter.RequestSource.TrafficInSameSession && (uris.IndexOf(uri) == 0))
+                        {
+                            cookie = ClientSync.PerformRequest(uri, cookie);
+                        }
+                        else
+                        {
+                            ClientAsync.PerformRequest(uri, cookie);
+                        }
+                        requestsStringBuilder.Append(uri + "<br />");
                     }
                     catch (Exception exp)
                     {
@@ -182,7 +186,7 @@ namespace DMS.Jump.TrafficGenerator.Presentation.Modules.TrafficGenerator
                 }
                 catch (Exception ex)
                 {
-                    lblUploadFile.Text = "ERROR: " + ex.Message.ToString();
+                    lblUploadFile.Text = "ERROR: " + ex.Message;
                 }
             }
         }
@@ -214,7 +218,7 @@ namespace DMS.Jump.TrafficGenerator.Presentation.Modules.TrafficGenerator
                 lblDateTo.Text = trafficParameter.DateRange.DateTo.ToString();
                 lblTrafficType.Text = trafficParameter.RequestSource.TrafficType.ToString();
                 lblTrafficNumberOfRequests.Text = trafficParameter.RequestSource.NumberOfRequests.ToString();
-                lblTrafficInSameSession.Text = trafficParameter.RequestSource.TrafficInSameSession.ToString(); 
+                lblTrafficInSameSession.Text = trafficParameter.RequestSource.TrafficInSameSession.ToString();
                 lblTrafficMode.Text = trafficParameter.RequestSource.Mode.ToString();
                 lblKeyword.Text = !String.IsNullOrEmpty(trafficParameter.RequestSource.Keyword) ? trafficParameter.RequestSource.Keyword : "-";
                 lblTrafficUrls.Text = trafficParameter.RequestSource.Urls.Count > 0 ? trafficParameter.RequestSource.Urls.Count.ToString() : "-";
@@ -235,12 +239,6 @@ namespace DMS.Jump.TrafficGenerator.Presentation.Modules.TrafficGenerator
         }
 
 
-        protected override void OnPreRender(EventArgs e)
-        {
-            base.OnPreRender(e);
-        }
-
-
         #region Private Helpers
 
         private void ResetWorkflow()
@@ -254,6 +252,7 @@ namespace DMS.Jump.TrafficGenerator.Presentation.Modules.TrafficGenerator
             rptData.DataBind();
 
             cbEstimateTime.Checked = false;
+            lblUploadFile.Text = string.Empty;
         }
         #endregion
 

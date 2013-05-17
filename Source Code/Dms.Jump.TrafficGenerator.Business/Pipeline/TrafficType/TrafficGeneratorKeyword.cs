@@ -9,6 +9,7 @@ using Sitecore.Web;
 using Sitecore.Diagnostics;
 
 using Dms.Jump.TrafficGenerator.Business.Helper;
+using Sitecore.Analytics;
 
 namespace Dms.Jump.TrafficGenerator.Business.Pipeline.TrafficType
 {
@@ -19,9 +20,9 @@ namespace Dms.Jump.TrafficGenerator.Business.Pipeline.TrafficType
             try
             {
                 // 2. Traffic Generator Traffic Type Processor
-                string queryStringValue = QueryStringHelper.SessionKeyword; 
+                string queryStringValue = QueryStringHelper.SessionKeyword;
+                args.Visit.Keywords = Tracker.Visitor.DataContext.GetKeywords(queryStringValue);
 
-                
             }
             catch (Exception exp)
             {
