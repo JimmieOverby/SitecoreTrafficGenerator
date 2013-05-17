@@ -57,6 +57,7 @@
     <Compile Include="Entities\DateRange.cs" />
     <Compile Include="Entities\Engagement.cs" />
     <Compile Include="Entities\Requests\ClientAsync.cs" />
+    <Compile Include="Entities\Requests\ClientSync.cs" />
     <Compile Include="Entities\Requests\RequestState.cs" />
     <Compile Include="Entities\RequestSource.cs" />
     <Compile Include="Entities\Requests\WebRequestInSameSession.cs" />
